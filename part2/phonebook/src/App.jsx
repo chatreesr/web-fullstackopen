@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import personService from './services/persons'
 
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
@@ -15,9 +15,9 @@ const App = () => {
   // Effects
   useEffect(() => {
     console.log('use effect fired')
-    axios.get('http://localhost:3001/persons').then((response) => {
-      console.log('promised fullfilled')
-      setPersons(response.data)
+    personService.getAll().then((initialPersons) => {
+      console.log('initialPersons', initialPersons)
+      setPersons(initialPersons)
     })
   }, [])
   console.log('render', persons.length, 'persons')
@@ -47,14 +47,47 @@ const App = () => {
     }
 
     if (persons.find((person) => person.name === newName.trim())) {
-      alert(`${newName} is already added to phonebook`)
-      return
+      if (
+        window.confirm(
+          `${newName} is already added to phonebook, replace the old number with a new one?`
+        )
+      ) {
+        const person = persons.find((person) => person.name === newName.trim())
+        const changedPerson = { ...person, number: newNumber }
+        personService
+          .update(person.id, changedPerson)
+          .then((returnedPerson) => {
+            setPersons(
+              persons.map((person) =>
+                person.id === returnedPerson.id ? returnedPerson : person
+              )
+            )
+            setNewName('')
+            setNewNumber('')
+          })
+        return
+      }
     }
 
+    // Save to the database via REST API
     const newPerson = { name: newName, number: newNumber }
-    setPersons(persons.concat(newPerson))
-    setNewName('')
-    setNewNumber('')
+    personService.create(newPerson).then((person) => {
+      setPersons(persons.concat(person))
+      setNewName('')
+      setNewNumber('')
+    })
+  }
+
+  const handleDeletePerson = (id) => {
+    const toBeDeleted = persons.find((person) => person.id === id)
+    console.log('person to be deleted', toBeDeleted)
+    if (window.confirm(`Delete ${toBeDeleted.name} ?`)) {
+      console.log('proceed to delete')
+      personService.deletePerson(id).then((deletedPerson) => {
+        console.log('deletedPerson', deletedPerson)
+        setPersons(persons.filter((person) => person.id !== deletedPerson.id))
+      })
+    }
   }
 
   const personsToShow =
@@ -79,7 +112,7 @@ const App = () => {
       />
 
       <h3>Numbers</h3>
-      <Persons persons={personsToShow} />
+      <Persons persons={personsToShow} onDelete={handleDeletePerson} />
     </div>
   )
 }

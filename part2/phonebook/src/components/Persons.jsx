@@ -1,6 +1,6 @@
 import PersonLine from './PersonLine'
 
-const Persons = ({ persons }) => {
+const Persons = ({ persons, onDelete }) => {
   return (
     <div>
       {persons.map((person) => (
@@ -8,6 +8,7 @@ const Persons = ({ persons }) => {
           key={person.name}
           name={person.name}
           number={person.number}
+          onDelete={() => onDelete(person.id)}
         />
       ))}
     </div>

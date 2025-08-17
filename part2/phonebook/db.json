@@ -18,7 +18,17 @@
     {
       "name": "Mary Poppendieck",
       "number": "39-23-6423122",
-      "id": "4"
+      "id": 4
+    },
+    {
+      "id": "cfca",
+      "name": "Chatree Sridaoduan",
+      "number": "66-909780043"
+    },
+    {
+      "id": "ddcc",
+      "name": "Dark Chocolate",
+      "number": "99-87858745"
     }
   ]
 }
