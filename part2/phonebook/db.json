@@ -18,7 +18,7 @@
     {
       "name": "Mary Poppendieck",
       "number": "39-23-6423122",
-      "id": 4
+      "id": "4"
     },
     {
       "id": "cfca",
@@ -26,9 +26,14 @@
       "number": "66-909780043"
     },
     {
-      "id": "ddcc",
+      "id": "69e9",
+      "name": "White Chocolate",
+      "number": "58-985-98745"
+    },
+    {
+      "id": "e56c",
       "name": "Dark Chocolate",
-      "number": "99-87858745"
+      "number": "66-9097800-432"
     }
   ]
 }

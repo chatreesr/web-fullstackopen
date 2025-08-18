@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import personService from './services/persons'
 
+import Notification from './components/Notification'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
@@ -11,6 +12,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [search, setSearch] = useState('')
+  const [notifyMessage, setNotifyMessage] = useState(null)
+  const [messageType, setMessageType] = useState('')
 
   // Effects
   useEffect(() => {
@@ -65,6 +68,16 @@ const App = () => {
             setNewName('')
             setNewNumber('')
           })
+          .catch((error) => {
+            setNotifyMessage(
+              `Information of ${newName.trim()} has already been removed from server`
+            )
+            setMessageType('error')
+            setPersons(
+              persons.filter((person) => person.name != newName.trim())
+            )
+            setTimeout(() => setNotifyMessage(null), 3000)
+          })
         return
       }
     }
@@ -75,6 +88,9 @@ const App = () => {
       setPersons(persons.concat(person))
       setNewName('')
       setNewNumber('')
+      setNotifyMessage(`Added ${person.name}`)
+      setMessageType('info')
+      setTimeout(() => setNotifyMessage(null), 3000)
     })
   }
 
@@ -100,6 +116,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={notifyMessage} type={messageType} />
       <Filter text="filter shown with" value={search} onChange={handleSearch} />
 
       <h3>Add a new</h3>
