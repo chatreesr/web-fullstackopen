@@ -1,0 +1,29 @@
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "name": "Chatree Sridaoduan",
+  "number": "66-909780043"
+}
+
+###
+
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "number": "66-909780043"
+}
+
+###
+
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "name": "Dark Chocolate"
+}
+
+###
+
+GET http://localhost:3001/api/persons
