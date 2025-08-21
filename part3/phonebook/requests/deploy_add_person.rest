@@ -1,0 +1,29 @@
+POST https://fullstack-phonebook-8ifv.onrender.com/api/persons
+Content-Type: application/json
+
+{
+  "name": "Chatree Sridaoduan",
+  "number": "66-909780043"
+}
+
+###
+
+POST https://fullstack-phonebook-8ifv.onrender.com/api/persons
+Content-Type: application/json
+
+{
+  "number": "66-909780043"
+}
+
+###
+
+POST https://fullstack-phonebook-8ifv.onrender.com/api/persons
+Content-Type: application/json
+
+{
+  "name": "Dark Chocolate"
+}
+
+###
+
+GET https://fullstack-phonebook-8ifv.onrender.com/api/persons
