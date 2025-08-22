@@ -1,5 +1,7 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
+const Person = require('./models/person')
 
 morgan.token('request-body', (request) => JSON.stringify(request.body))
 
@@ -13,40 +15,34 @@ app.use(
 )
 
 // Initial in-memory data
-let persons = [
-  {
-    id: '1',
-    name: 'Arto Hellas',
-    number: '040-123456',
-  },
-  {
-    id: '2',
-    name: 'Ada Lovelace',
-    number: '39-44-5323523',
-  },
-  {
-    id: '3',
-    name: 'Dan Abramov',
-    number: '12-43-234345',
-  },
-  {
-    id: '4',
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122',
-  },
-]
-
-const generateRandomInt = (max) => {
-  return Math.floor(Math.random() * max)
-}
-
-const generateRandomId = () => {
-  return generateRandomInt(Number.MAX_SAFE_INTEGER)
-}
+// let persons = [
+//   {
+//     id: '1',
+//     name: 'Arto Hellas',
+//     number: '040-123456',
+//   },
+//   {
+//     id: '2',
+//     name: 'Ada Lovelace',
+//     number: '39-44-5323523',
+//   },
+//   {
+//     id: '3',
+//     name: 'Dan Abramov',
+//     number: '12-43-234345',
+//   },
+//   {
+//     id: '4',
+//     name: 'Mary Poppendieck',
+//     number: '39-23-6423122',
+//   },
+// ]
 
 // Define routes
 app.get('/api/persons', (request, response) => {
-  response.json(persons)
+  Person.find({}).then((persons) => {
+    response.json(persons)
+  })
 })
 
 app.post('/api/persons', (request, response) => {
@@ -58,34 +54,31 @@ app.post('/api/persons', (request, response) => {
   }
 
   // Check for existing name
-  const existingName = persons.find(
-    (person) => person.name === request.body.name
-  )
-  if (existingName) {
-    return response.status(400).json({
-      error: `name '${request.body.name}' already exists. Please choose a unique name.`,
-    })
-  }
-  const person = {
-    id: generateRandomId(),
+  // FIXME Searching for existing name does not work
+  // const existingName = Person.find({ name: request.body.name }).then(
+  //   (person) => {
+  //     console.log(person)
+  //     person.name
+  //   }
+  // )
+  // if (existingName) {
+  //   return response.status(400).json({
+  //     error: `name '${request.body.name}' already exists. Please choose a unique name.`,
+  //   })
+  // }
+
+  const person = new Person({
     name: request.body.name,
     number: request.body.number,
-  }
+  })
 
-  persons = persons.concat(person)
-  response.status(201).json(person)
+  person.save().then((savedPerson) => {
+    response.status(201).json(savedPerson)
+  })
 })
 
 app.get('/api/persons/:id', (request, response) => {
-  const id = request.params.id
-
-  const person = persons.find((person) => person.id === id)
-
-  if (person) {
-    response.json(person)
-  } else {
-    response.status(404).end()
-  }
+  Person.findById(request.params.id).then((person) => response.json(person))
 })
 
 app.delete('/api/persons/:id', (request, response) => {

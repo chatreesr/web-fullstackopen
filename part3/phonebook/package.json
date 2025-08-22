@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:ui": "cd ../../part2/phonebook && npm run build && cp -r dist ../../part3/phonebook",
+    "build:ui": "rm -rf ./dist && cd ../../part2/phonebook && npm run build && cp -r dist ../../part3/phonebook",
     "deploy:full": "npm run build:ui && cd ../../ && git add . && git commit -m uibuild && git push origin main",
     "start": "node index.js",
     "dev": "node --watch index.js",
@@ -13,7 +13,9 @@
   "author": "Chatree Sridaoduan",
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "mongoose": "^8.17.2",
     "morgan": "^1.10.1"
   }
 }
