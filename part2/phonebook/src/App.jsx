@@ -69,10 +69,10 @@ const App = () => {
             setNewNumber('')
           })
           .catch((error) => {
+            setMessageType('error')
             setNotifyMessage(
               `Information of ${newName.trim()} has already been removed from server`
             )
-            setMessageType('error')
             setPersons(
               persons.filter((person) => person.name != newName.trim())
             )
@@ -84,14 +84,21 @@ const App = () => {
 
     // Save to the database via REST API
     const newPerson = { name: newName, number: newNumber }
-    personService.create(newPerson).then((person) => {
-      setPersons(persons.concat(person))
-      setNewName('')
-      setNewNumber('')
-      setNotifyMessage(`Added ${person.name}`)
-      setMessageType('info')
-      setTimeout(() => setNotifyMessage(null), 3000)
-    })
+    personService
+      .create(newPerson)
+      .then((person) => {
+        setPersons(persons.concat(person))
+        setNewName('')
+        setNewNumber('')
+        setMessageType('info')
+        setNotifyMessage(`Added ${person.name}`)
+        setTimeout(() => setNotifyMessage(null), 3000)
+      })
+      .catch((error) => {
+        setMessageType('error')
+        setNotifyMessage(error.response.data.error)
+        setTimeout(() => setNotifyMessage(null), 3000)
+      })
   }
 
   const handleDeletePerson = (id) => {
