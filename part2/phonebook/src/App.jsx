@@ -99,10 +99,10 @@ const App = () => {
     console.log('person to be deleted', toBeDeleted)
     if (window.confirm(`Delete ${toBeDeleted.name} ?`)) {
       console.log('proceed to delete')
-      // TODO: this code relies on DELETE /api/persons/:id to return the deleted entity which currently it isn't. Fix this somehow.
-      personService.deletePerson(id).then((deletedPerson) => {
-        console.log('deletedPerson', deletedPerson)
-        setPersons(persons.filter((person) => person.id !== deletedPerson.id))
+      personService.deletePerson(id).then((status) => {
+        if (status === 204) {
+          setPersons(persons.filter((person) => person.id !== toBeDeleted.id))
+        }
       })
     }
   }
