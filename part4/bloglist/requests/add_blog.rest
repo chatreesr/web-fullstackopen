@@ -1,0 +1,21 @@
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+
+{
+  "title": "Building a Full Stack AI System with Go and React",
+  "author": "Chatree Sridaoduan",
+  "url": "https://github.com/chatreesr",
+  "likes": 3000
+}
+
+###
+
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+
+{
+  "title": "Full Stack Open",
+  "author": "University of Helsinki",
+  "url": "https://fullstackopen.com/en/",
+  "likes": 30000
+}
