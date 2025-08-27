@@ -129,7 +129,7 @@ describe('favorite blog', () => {
   })
 })
 
-//ANCHOR - Exercise 4.6*
+//NOTE - Exercise 4.6*
 describe('most blogs', () => {
   test('of empty list is empty object', () => {
     const actual = listHelper.mostBlogs([])
@@ -152,7 +152,7 @@ describe('most blogs', () => {
   })
 })
 
-//ANCHOR - Exercise 4.7*
+//NOTE - Exercise 4.7*
 describe('most likes', () => {
   test('of empty list is empty object', () => {
     const actual = listHelper.mostLikes([])
