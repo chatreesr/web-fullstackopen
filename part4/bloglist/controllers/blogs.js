@@ -1,26 +1,64 @@
+const jwt = require('jsonwebtoken')
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
+//NOTE - Exercise 4.17
 blogsRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({})
+  const blogs = await Blog.find({}).populate('user', {
+    username: 1,
+    name: 1,
+  })
   response.json(blogs)
 })
 
-blogsRouter.post('/', async (request, response) => {
-  const blog = request.body
+//NOTE - Exercise 4.19
+//TODO - Exercise 4.20 - Refactor this to a middleware
+const getTokenFrom = (request) => {
+  const authorization = request.get('authorization')
+  if (authorization && authorization.startsWith('Bearer ')) {
+    return authorization.replace('Bearer ', '')
+  }
+  return null
+}
 
-  if (!blog.title || !blog.url) {
+blogsRouter.post('/', async (request, response) => {
+  const body = request.body
+
+  // Check jwt token
+  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
+  if (!decodedToken) {
+    return response.status(401).json({ error: 'token invalid' })
+  }
+
+  const user = await User.findById(decodedToken.id)
+
+  if (!user) {
+    return response.status(400).json({ error: 'userId missing or not valid' })
+  }
+
+  if (!body.title || !body.url) {
     return response.status(400).json({
       error: 'url and title are required.',
     })
   }
 
-  if (!blog.likes) {
-    blog.likes = 0
+  if (!body.likes) {
+    body.likes = 0
+  }
+
+  const blog = {
+    title: body.title,
+    url: body.url,
+    author: body.author,
+    likes: body.likes,
+    user: user._id,
   }
 
   const newBlog = new Blog(blog)
   const savedBlog = await newBlog.save()
+  user.blogs = user.blogs.concat(savedBlog._id)
+  await user.save()
   response.status(201).json(savedBlog)
 })
 

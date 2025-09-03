@@ -4,6 +4,7 @@ const middleware = require('./utils/middleware')
 const express = require('express')
 const morgan = require('morgan')
 const mongoose = require('mongoose')
+const loginRouter = require('./controllers/login')
 const blogsRouter = require('./controllers/blogs')
 const usersRouter = require('./controllers/users')
 
@@ -28,6 +29,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 app.use(express.json())
 
+app.use('/api/login', loginRouter)
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
 

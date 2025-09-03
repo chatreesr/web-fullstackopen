@@ -89,6 +89,85 @@ describe('when there is one user in db', () => {
     const usersAtEnd = await helper.usersInDb()
     assert.strictEqual(usersAtStart.length, usersAtEnd.length)
   })
+
+  test('POST /api/users rejects invalid 2-character username', async () => {
+    const usersAtStart = await helper.usersInDb()
+
+    // Create a 2-character username
+    const newUser = {
+      username: 'ro',
+      name: 'Dark Chocolate',
+      password: 'eat100%',
+    }
+
+    // Expect a bad request
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    // Confirm correct error message
+    assert(result.body.error.includes('User validation failed: username:'))
+
+    // Confirm there's no change to the test database
+    const usersAtEnd = await helper.usersInDb()
+    assert.strictEqual(usersAtStart.length, usersAtEnd.length)
+  })
+
+  test('POST /api/users rejects invalid 2-character password', async () => {
+    const usersAtStart = await helper.usersInDb()
+
+    // Create a 2-character username
+    const newUser = {
+      username: 'root',
+      name: 'Dark Chocolate',
+      password: 'ea',
+    }
+
+    // Expect a bad request
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    // Confirm correct error message
+    assert(
+      result.body.error.includes('password must be at least 3 characters long.')
+    )
+
+    // Confirm there's no change to the test database
+    const usersAtEnd = await helper.usersInDb()
+    assert.strictEqual(usersAtStart.length, usersAtEnd.length)
+  })
+
+  test('POST /api/users rejects empty password', async () => {
+    const usersAtStart = await helper.usersInDb()
+
+    // Create a 2-character username
+    const newUser = {
+      username: 'root',
+      name: 'Dark Chocolate',
+      password: '',
+    }
+
+    // Expect a bad request
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    // Confirm correct error message
+    assert(
+      result.body.error.includes('password must be at least 3 characters long.')
+    )
+
+    // Confirm there's no change to the test database
+    const usersAtEnd = await helper.usersInDb()
+    assert.strictEqual(usersAtStart.length, usersAtEnd.length)
+  })
 })
 
 after(async () => {
