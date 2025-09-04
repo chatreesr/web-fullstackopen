@@ -1,18 +1,39 @@
 const { test, describe, after, beforeEach } = require('node:test')
 const assert = require('node:assert')
+const bcrypt = require('bcrypt')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const helper = require('./test_helper')
-const blog = require('../models/blog')
 
 const api = supertest(app)
 
 describe('When there are initially some blogs...', () => {
   beforeEach(async () => {
+    // Prepare a user
+    await User.deleteMany({})
+
+    const passwordHash = await bcrypt.hash('sekret', 10)
+
+    // create a new user
+    const user = new User({
+      name: 'Super Admin',
+      username: 'root',
+      passwordHash,
+    })
+
+    // save a new user to the test database
+    await user.save()
+
+    // Prepare blogs
+    const blogsWithOwner = helper.initialBlogs.map((blog) => {
+      return { ...blog, user: user._id.toString() }
+    })
+
     await Blog.deleteMany({})
-    await Blog.insertMany(helper.initialBlogs)
+    await Blog.insertMany(blogsWithOwner)
   })
 
   //NOTE - Exercist 4.9
@@ -42,9 +63,9 @@ describe('When there are initially some blogs...', () => {
     })
   })
 
-  //NOTE - Exercise 4.10
+  //NOTE - Exercise 4.10 & Exercise 4.23*
   describe('POST /api/blogs', () => {
-    test('adds a valid blog successfully', async () => {
+    test('rejects adding the blog and returns 401 if token is missing', async () => {
       const newBlog = {
         title: 'Lets Go',
         author: 'Alex Exwards',
@@ -56,6 +77,35 @@ describe('When there are initially some blogs...', () => {
       const savedBlog = await api
         .post('/api/blogs')
         .send(newBlog)
+        .expect(401)
+        .expect('Content-Type', /application\/json/)
+
+      // No blog is added
+      const blogs = await helper.blogsInDb()
+      assert.strictEqual(blogs.length, helper.initialBlogs.length)
+    })
+
+    test('adds a valid blog successfully with correct owner', async () => {
+      // login
+      const response = await api.post('/api/login').send({
+        username: 'root',
+        password: 'sekret',
+      })
+
+      const token = response.body.token
+
+      const newBlog = {
+        title: 'Lets Go',
+        author: 'Alex Exwards',
+        url: 'https://letsgo.com/',
+        likes: 4,
+      }
+
+      // Check response header
+      const savedBlog = await api
+        .post('/api/blogs')
+        .set({ authorization: `Bearer ${token}` })
+        .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
 
@@ -66,10 +116,22 @@ describe('When there are initially some blogs...', () => {
       // Check the correct blog is saved
       const titles = blogs.map((blog) => blog.title)
       assert(titles.includes('Lets Go'))
+
+      // Check savedBlog
+      const owner = await User.findById(savedBlog.body.user)
+      assert.strictEqual(owner.username, 'root')
     })
 
     //NOTE - Exercise 4.11
     test('sets likes to 0 if not set', async () => {
+      // login
+      const response = await api.post('/api/login').send({
+        username: 'root',
+        password: 'sekret',
+      })
+
+      const token = response.body.token
+
       const newBlogWithoutLikes = {
         title: 'Lets Go',
         author: 'Alex Exwards',
@@ -77,15 +139,25 @@ describe('When there are initially some blogs...', () => {
       }
 
       // Add the new blog
-      const response = await api.post('/api/blogs').send(newBlogWithoutLikes)
-      const savedBlog = response.body
+      const savedBlog = await api
+        .post('/api/blogs')
+        .set({ Authorization: `Bearer ${token}` })
+        .send(newBlogWithoutLikes)
 
       // Check that likes = 0
-      assert.strictEqual(savedBlog.likes, 0)
+      assert.strictEqual(savedBlog.body.likes, 0)
     })
 
     //NOTE - Exercise 4.12
     test('rejects missing url in request', async () => {
+      // login
+      const response = await api.post('/api/login').send({
+        username: 'root',
+        password: 'sekret',
+      })
+
+      const token = response.body.token
+
       const invalidBlog = {
         title: 'Lets Go',
         author: 'Alex Exwards',
@@ -93,7 +165,11 @@ describe('When there are initially some blogs...', () => {
       }
 
       // Should reject the POST with 400 Bad Request
-      await api.post('/api/blogs').send(invalidBlog).expect(400)
+      await api
+        .post('/api/blogs')
+        .set({ Authorization: `Bearer ${token}` })
+        .send(invalidBlog)
+        .expect(400)
 
       // Check no data is added to the database
       const blogs = await helper.blogsInDb()
@@ -101,6 +177,13 @@ describe('When there are initially some blogs...', () => {
     })
 
     test('rejects missing title in request', async () => {
+      // login
+      const response = await api.post('/api/login').send({
+        username: 'root',
+        password: 'sekret',
+      })
+
+      const token = response.body.token
       const invalidBlog = {
         author: 'Alex Exwards',
         url: 'https://letsgo.com',
@@ -108,7 +191,11 @@ describe('When there are initially some blogs...', () => {
       }
 
       // Should reject the POST with 400 Bad Request
-      await api.post('/api/blogs').send(invalidBlog).expect(400)
+      await api
+        .post('/api/blogs')
+        .set({ Authorization: `Bearer ${token}` })
+        .send(invalidBlog)
+        .expect(400)
 
       // Check no data is added to the database
       const blogs = await helper.blogsInDb()
@@ -118,12 +205,34 @@ describe('When there are initially some blogs...', () => {
 
   //NOTE - Exercise 4.13
   describe('DELETE /api/blogs/:id', () => {
-    test('returns 204 if id is valid', async () => {
+    test('rejects the delete request and return 401 if token is missing', async () => {
+      const blogsAtStart = await helper.blogsInDb()
+      const blogToDelete = blogsAtStart[0]
+
+      // Expect a 401
+      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(401)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtStart.length, blogsAtEnd.length)
+    })
+
+    test('deletes the blog and returns 204 if valid', async () => {
+      // login
+      const response = await api.post('/api/login').send({
+        username: 'root',
+        password: 'sekret',
+      })
+
+      const token = response.body.token
+
       const blogsAtStart = await helper.blogsInDb()
       const blogToDelete = blogsAtStart[0]
 
       // Expect a 204
-      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+      await api
+        .delete(`/api/blogs/${blogToDelete.id}`)
+        .set({ Authorization: `Bearer ${token}` })
+        .expect(204)
 
       // Check deletion
       const blogsAtEnd = await helper.blogsInDb()
@@ -133,8 +242,6 @@ describe('When there are initially some blogs...', () => {
       // Check length reduced by 1
       assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1)
     })
-
-    //TODO - Consider adding a test if id is invalid
   })
 
   //NOTE - Exercise 4.14

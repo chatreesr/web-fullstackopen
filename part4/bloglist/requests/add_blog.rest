@@ -1,5 +1,6 @@
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFpbWkiLCJpZCI6IjY4YjZlY2UzODc2ZmVjMjE0MDY5YmJjMyIsImlhdCI6MTc1NjkwODQ2OX0.DBo2CWD_NeIplrUDoEURNtdXWGZW4930TlmWJ7W48hw
 
 {
   "title": "Building a Full Stack AI System with Go and React",
@@ -12,6 +13,7 @@ Content-Type: application/json
 
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFpbWkiLCJpZCI6IjY4YjZlY2UzODc2ZmVjMjE0MDY5YmJjMyIsImlhdCI6MTc1NjkwODQ2OX0.DBo2CWD_NeIp
 
 {
   "title": "Full Stack Open",

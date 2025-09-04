@@ -1,4 +1,6 @@
 const logger = require('./logger')
+const jwt = require('jsonwebtoken')
+const User = require('../models/user')
 
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
@@ -24,7 +26,40 @@ const errorHandler = (error, request, response, next) => {
   next(error)
 }
 
+//NOTE - Exercise 4.20*
+const tokenExtractor = (request, response, next) => {
+  const authorization = request.get('authorization')
+  if (authorization && authorization.startsWith('Bearer ')) {
+    request.token = authorization.replace('Bearer ', '')
+  }
+
+  next()
+}
+
+//NOTE - Exercise 4.22*
+// How should I handle errors in middleware?
+const userExtractor = async (request, response, next) => {
+  if (!request.token) {
+    return response.status(401).json({ error: 'access token missing' })
+  }
+
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)
+  if (!decodedToken) {
+    return response.status(400).json({ error: 'token invalid' })
+  }
+
+  const user = await User.findById(decodedToken.id)
+  if (!user) {
+    return response.status(400).json({ error: 'userId missing or not valid' })
+  }
+
+  request.user = user
+  next()
+}
+
 module.exports = {
   unknownEndpoint,
   errorHandler,
+  tokenExtractor,
+  userExtractor,
 }
